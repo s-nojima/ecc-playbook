@@ -1,5 +1,5 @@
 # このプロジェクト（リポジトリ）について
-このリポジトリは Crisp Code が管理するサーバの構成を管理するためのAnsible playbookです。
+ansiible playbookです。
 
 ## プレイブックの書き方
 AnsibleにはRolesという記述するためのガイドラインのようなものがあります。
