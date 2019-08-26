@@ -1,0 +1,66 @@
+- name: set the policy for the OUTPUT chain to ACCEPPT
+  iptables:
+    chain: OUTPUT
+    policy: ACCEPT
+  notify: iptables save
+  become: yes
+  
+- name: Allow related and established connections
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    ctstate: ESTABLISHED,RELATED
+    jump: ACCEPT
+  notify: iptables save
+  become: yes
+  
+- name: Allow new incoming SYN packets on TCP port 22 (SSH).
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: 22
+    ctstate: NEW
+    jump: ACCEPT
+    comment: Accept new SSH connections.
+  notify: iptables save
+  become: yes
+  
+- name: Allow loopback interface
+  iptables:
+    chain: INPUT
+    in_interface: lo
+    jump: ACCEPT
+  notify: iptables save
+  become: yes
+  
+- name: Drop stealth scanning 
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    tcp_flags:
+      flags: ALL
+      flags_set:
+        - ACK
+        - RST
+        - SYN
+        - FIN
+    jump: DROP
+  notify: iptables save
+  become: yes
+  
+- name: Allow DNS Answer
+  iptables:
+    chain: INPUT
+    protocol: udp
+    source_port: 53
+    jump: ACCEPT
+  notify: iptables save
+  become: yes
+
+- name: set the policy for the INPUT chain to DROP
+  iptables:
+    chain: INPUT
+    policy: DROP
+  notify: iptables save
+  become: yes
+

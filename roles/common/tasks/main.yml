@@ -1,0 +1,9 @@
+---
+- name: install epel
+  yum:
+    name: epel-release
+    state: latest
+
+- include: firewall.yml
+- include: ansible_required.yml
+

@@ -1,0 +1,42 @@
+- name: disable firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+    masked: yes
+  tags: firewall
+  become: yes
+
+- name: install iptables-services
+  yum:
+    name: iptables-services
+    state: latest
+  tags: firewall
+  become: yes
+
+- name: install fail2ban
+  yum:
+    name: fail2ban
+    state: latest
+  tags: firewall
+  become: yes
+
+- name: enable iptables
+  systemd:
+    name: iptables
+    state: started
+    enabled: yes
+  tags: firewall
+  become: yes
+
+- name: enable ip6tables
+  systemd:
+    name: ip6tables
+    state: started
+    enabled: yes
+  tags: firewall
+  become: yes
+
+- include: iptables.yml
+
+- include: fail2ban.yml

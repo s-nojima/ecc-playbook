@@ -1,0 +1,40 @@
+
+- name: cp jail.conf jail.local
+  shell: cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+  args:
+    creates: /etc/fail2ban/jail.local
+  notify: restart fail2ban
+    
+- name: bannaction iptables setting
+  replace:
+    dest: /etc/fail2ban/jail.local
+    regexp: '\s= firewallcmd-ipset'
+    replace: '= iptables-multiport'
+  notify: restart fail2ban
+
+- name: bannaction_allports
+  replace:
+    dest: /etc/fail2ban/jail.local
+    regexp: '\s= firewallcmd-allports'
+    replace: '= iptables-allport'
+  notify: restart fail2ban
+
+
+
+- name: fail2ban sshd setting
+  blockinfile:
+    dest: /etc/fail2ban/jail.local
+    insertafter: '\[sshd\]'
+    block: |
+      findtime = 600
+      maxretry = 3
+      enabled = true
+      bantime = 1800
+  notify: restart fail2ban
+  
+- name: fail2ban blocktype to DROP
+  replace:
+    dest: /etc/fail2ban/action.d/iptables-common.conf
+    regexp: '\s= REJECT --reject-with icmp-port-unreachable'
+    replace: '= DROP'
+  notify: restart fail2ban

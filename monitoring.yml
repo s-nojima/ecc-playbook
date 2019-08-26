@@ -1,0 +1,7 @@
+- hosts: monitoring
+  roles:
+    - common
+    - zabbix-server
+  become: yes
+  become_method: su
+

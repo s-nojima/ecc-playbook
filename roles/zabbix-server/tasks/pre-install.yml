@@ -1,0 +1,9 @@
+
+- name: mount "{{ mysql_mount_device }}" to /var/lib/mysql
+  mount:
+    path: /var/lib/mysql
+    src: "{{ mysql_mount_device }}"
+    fstype: ext4
+    state: mounted
+  become: yes
+  when: mysql_mount_device is defined

@@ -1,0 +1,108 @@
+##
+##
+- name: setting my.cnf
+  blockinfile:
+    dest: /etc/my.cnf
+    block: |
+      default-authentication-plugin = mysql_native_password
+      log_timestamps=SYSTEM
+
+- name: get mysqld.log file status
+  stat:
+    path: /var/log/mysqld.log
+  register: log_file
+  changed_when: false
+
+- name: find /var/lib/mysql/*
+  find:
+    paths: /var/lib/mysql
+    file_type: any
+  register: before_initiarized_files
+  when: log_file.stat.size == 0
+
+- name: delete /var/lib/mysqld/*
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ before_initiarized_files.files }}"
+  when: log_file.stat.size == 0
+  become: yes
+
+  #- name: mysql initialize
+  #  command: /usr/sbin/mysqld --initialize
+  #  changed_when: false
+  #  when: log_file.stat.size == 0
+  #  become: yes
+
+- name: start mysqld
+  systemd:
+    name: mysqld
+    state: started
+    enabled: yes
+  become: yes
+  when: log_file.stat.size == 0
+
+- name: get root password
+  shell: "grep 'A temporary password is generated for root@localhost' /var/log/mysqld.log | awk -F ' ' '{print $(NF)}'"
+  register: root_password
+  when: log_file.stat.size == 0
+
+
+- name: update expired root user password
+  command: mysql --user root --password={{ root_password.stdout }} --connect-expired-password --execute="ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_settings.root.password }}';"
+  when: log_file.stat.size == 0
+  #  mysql_user:
+  #  login_user: root
+  #  login_password: "{{ root_password.stdout }}"
+  #  name: root
+  #  password: "{{ mysql_settings.root.password }}"
+  #  priv: '*.*:ALL,GRANT'
+  #  state: present
+  #  host: '%'
+  #  the mysql_user has a bug 
+  # 
+
+- name: run mysql_secure_installation
+  expect: 
+    command: mysql_secure_installation -u root -p -D
+    responses: 
+      '^Enter password:' : '{{ mysql_settings.root.password }}'
+  changed_when: false
+  notify: restart mysqld
+  when: log_file.stat.size == 0
+  become: yes
+
+- name: setting /root/.my.cnf
+  template: 
+    src: .my.cnf.j2
+    dest: /root/.my.cnf
+    owner: root
+    group: root
+    mode: 600
+
+- name: create database zabbix
+  mysql_db:
+    name: zabbix
+    encoding: utf8
+    state: present
+
+- name: create zabbix user in mysql
+  mysql_user:
+    name: zabbix
+    password: "{{ zabbix.mysql_password}}"
+    priv: 'zabbix.*:ALL,GRANT'
+    state: present
+
+- name: check to exist  zabbix table. ignore status is OK.
+  shell: mysql -u root -ss zabbix -e "select count(*) from users"
+  ignore_errors: yes
+  register: count_users
+
+- name: insert zabbix DB
+  shell: zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql zabbix -u root
+  when: count_users.rc != 0
+
+- name: remove /root/.my.cnf
+  file: 
+    path: /root/.my.cnf
+    state: absent

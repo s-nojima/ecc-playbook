@@ -1,0 +1,2 @@
+
+mysql_mount_device: /dev/database-vg/database-lv 

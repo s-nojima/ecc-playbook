@@ -1,0 +1,25 @@
+---
+
+- name: restart httpd
+  systemd:
+    name: httpd
+    state: restarted
+  become: yes
+
+- name: restart mysqld
+  systemd: 
+    name: mysqld
+    state: restarted
+  become: yes
+
+- name: restart zabbix-server
+  systemd:
+    name: zabbix-server
+    status: restarted
+    enabled: yes
+
+- name: restart zabbix-agent
+  systemd:
+    name: zabbix-agent
+    status: restarted
+    enabled: yes

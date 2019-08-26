@@ -1,0 +1,9 @@
+#
+mysql_settings:
+  root:
+    user: root
+    password: CrispCode_170401
+  socket_dir: /var/lib/mysql/mysql.socket
+
+zabbix:
+  mysql_password: b%Unfe+M*72y9

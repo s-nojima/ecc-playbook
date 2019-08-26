@@ -1,0 +1,6 @@
+
+- include: pre-install.yml
+- include: install.yml
+- include: mysql.yml
+- include: httpd.yml
+- include: zabbix.yml

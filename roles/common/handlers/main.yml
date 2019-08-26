@@ -1,0 +1,25 @@
+
+- name: yum update
+  yum:
+    name: "*"
+    state: latest
+
+- name: iptables save
+  shell: /usr/sbin/iptables-save > /etc/sysconfig/iptables
+  changed_when: False
+
+
+- name: restart iptables
+  systemd:
+    name: iptables
+    state: restarted
+  tags: firewall
+  become: yes
+
+- name: restart fail2ban
+  systemd:
+    name: fail2ban
+    state: restarted
+    enabled: yes
+  tags: firewall
+  become: yes

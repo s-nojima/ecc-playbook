@@ -1,0 +1,50 @@
+  #- name: allow connection from zabbix-agent 
+  #  iptables:
+  #    chain: INPUT
+  #    protocol: tcp
+  #    destination_port: 10051
+  #    jump: ACCEPT
+  #    comment: allow connetion from zabbix-agent
+  #  notify: iptables save
+  #  become: yes
+
+- name: modify config
+  lineinfile:
+    dest: '/etc/zabbix/zabbix_server.conf'
+    state: present
+    backrefs: yes
+    regexp: 'DBPassword=$'
+    line: "DBPassword={{ zabbix.mysql_password }}"
+  become: yes
+  notify:
+    - restart zabbix-server
+
+- name: template zabbix.conf.php
+  template:
+    src: zabbix.conf.php.j2
+    dest: /etc/zabbix/web/zabbix.conf.php
+    owner: apache
+    group: apache
+    mode: 0644
+
+- name: recursively change user group /usr/share/zabbix/assets(for zabbix bug)
+  file:
+    path: /usr/share/zabbix/assets
+    recurse: yes
+    owner: apache
+    group: apache
+  become: yes
+
+- name: enabled and start zabbix-server
+  service:
+    name: zabbix-server
+    state: started
+    enabled: yes
+  become: yes
+
+- name: enabled and start zabbix-agent
+  service:
+    name: zabbix-agent
+    state: started
+    enabled: yes
+  become: yes

@@ -1,0 +1,11 @@
+#
+- name: install pip
+  yum:
+    name: python-pip
+  
+- name: pip upgrade and install pexpect
+  pip:
+    name: 
+      - pip
+      - pexpect
+    state: latest
